@@ -21,7 +21,10 @@ curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.1.tar.gz | tar x
 其他安装方式：
 
 ```bash
-# 从 GitHub
+# 从 GitHub（无需 git）
+curl -fsSL https://codeload.github.com/zizdog/esxi-clone/tar.gz/refs/heads/main | tar xz -C /tmp && bash /tmp/esxi-clone-main/install.sh
+
+# 从 GitHub（需要 git）
 git clone https://github.com/zizdog/esxi-clone.git && cd esxi-clone && bash install.sh
 
 # 指定安装目录
