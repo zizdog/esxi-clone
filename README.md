@@ -100,6 +100,22 @@ esxi-clone --base win11 --count 20 --prefix ci- --yes
 
 目标 ESXi 的 SSH 未开启时，工具会询问并尝试通过 API 启动 `TSM-SSH`。
 
+## SSH 是必需的
+
+克隆过程要在 ESXi 本地完成文件操作（复制增量盘、读描述符、删除目录），
+这些能力 vSphere API 并不提供，所以工具通过 SSH 执行 `cp` / `cat` / `du` / `rm` / `vmkfstools`。
+
+生产环境建议按需开关：
+
+```bash
+# 图形界面：主机 → 管理 → 服务 → TSM-SSH → 启动 / 停止
+# 命令行（在 ESXi 上）：
+/etc/init.d/SSH start
+/etc/init.d/SSH stop
+```
+
+用完记得关掉。工具检测到 SSH 关闭时会询问是否通过 API 临时启动。
+
 ## 注意事项
 
 - **删除克隆必须用 `esxi-clone --delete`**。在 vSphere 界面点“删除”或用 `Destroy_Task`，ESXi 会把整条磁盘链删掉，包括所有克隆共用的母盘，全部克隆一起报废。
