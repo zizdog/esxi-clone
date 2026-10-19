@@ -98,7 +98,7 @@ if [ "$SIZE" -lt 5000 ] || ! grep -q "esxi-clone" "$INSTALL_DIR/esxi-clone.py"; 
     die "下载的 esxi-clone.py 不完整（${SIZE} 字节），请检查 $BASE_URL/esxi-clone.py 是否存在"
 fi
 chmod 644 "$INSTALL_DIR/esxi-clone.py"
-ok "已下载 ${SIZE} 字节"
+ok "主程序 ${SIZE} 字节"
 
 # ---------------------------------------------------------------- 启动器
 cat > "$INSTALL_DIR/esxi-clone" <<EOF
