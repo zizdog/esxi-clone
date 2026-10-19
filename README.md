@@ -13,7 +13,7 @@ ESXi 单机（无 vCenter）**链接克隆**工具。
 ## 安装
 
 ```bash
-curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.1.tar.gz | tar xz -C /tmp && bash /tmp/esxi-clone/install.sh
+curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.2.tar.gz | tar xz -C /tmp && bash /tmp/esxi-clone/install.sh
 ```
 
 装完直接运行 `esxi-clone`。安装器会创建 `~/.esxi-clone`、准备独立的 Python 环境、安装依赖，并生成命令。
@@ -88,7 +88,7 @@ esxi-clone --base win11 --count 20 --prefix ci- --yes
 | `ESXI_CLONE_DIR` | 安装目录（仅安装器使用） |
 | `ESXI_CLONE_BASE` | 下载源（仅安装器使用） |
 
-安全提示：`--save-password` 会把密码明文写入 `~/.config/esxi-clone/config.json`，仅在个人机器上使用。
+密码**只从交互输入或 `ESXI_PASSWORD` 环境变量读取，不会写入磁盘**。`--save` 只保存地址和用户名。
 
 ## 创建时自动做了什么
 
@@ -110,7 +110,7 @@ esxi-clone --base win11 --count 20 --prefix ci- --yes
 ## 卸载
 
 ```bash
-curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.1.tar.gz | tar xz -C /tmp && bash /tmp/esxi-clone/install.sh --uninstall
+curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.2.tar.gz | tar xz -C /tmp && bash /tmp/esxi-clone/install.sh --uninstall
 ```
 
 或手动：

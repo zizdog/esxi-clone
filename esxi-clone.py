@@ -9,13 +9,15 @@
     esxi-clone --delete win11-05
     esxi-clone --host 192.168.1.2 --user root --save
 
+密码只从交互输入或环境变量 ESXI_PASSWORD 读取，永远不会写入磁盘。
+
 依赖：pyvmomi、paramiko（install.sh 会自动装好）
 原理：复制母盘快照的 seSparse 增量盘，让每台克隆机共享只读母盘，写入只落自己的增量盘。
 安全：删除克隆必须走本工具的 --delete（Unregister + 只删自身目录），
       绝不能用 vSphere 界面的“删除”，否则会把共享母盘一起删掉。
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import argparse
 import hashlib
@@ -115,12 +117,20 @@ def ds_root(ds):
 def load_config():
     try:
         with open(CONFIG_PATH) as fh:
-            return json.load(fh)
+            cfg = json.load(fh)
     except Exception:
         return {}
+    if "password" in cfg:                     # 兼容旧版本：清掉曾经保存的密码
+        cfg.pop("password", None)
+        try:
+            save_config(cfg, quiet=True)
+            print("[提示] 检测到旧版本保存过的密码，已从配置文件中删除")
+        except Exception:
+            pass
+    return cfg
 
 
-def save_config(cfg):
+def save_config(cfg, quiet=False):
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
     old_mask = os.umask(0o077)
     try:
@@ -129,26 +139,28 @@ def save_config(cfg):
     finally:
         os.umask(old_mask)
     os.chmod(CONFIG_PATH, stat.S_IRUSR | stat.S_IWUSR)
-    info(f"已保存连接信息到 {CONFIG_PATH}")
+    if not quiet:
+        info(f"已保存连接信息到 {CONFIG_PATH}（不含密码）")
 
 
 def resolve_credentials(args):
+    """密码只存在于内存（或调用者自己设的环境变量），绝不写入磁盘。"""
     cfg = load_config()
     host = args.host or os.environ.get("ESXI_HOST") or cfg.get("host")
     user = args.user or os.environ.get("ESXI_USER") or cfg.get("user") or "root"
-    password = os.environ.get("ESXI_PASSWORD") or cfg.get("password")
     ssh_port = args.ssh_port or int(os.environ.get("ESXI_SSH_PORT") or cfg.get("ssh_port") or 22)
 
-    need_save = False
     if not host:
         if AUTO_YES:
             die("非交互模式请用 --host 或环境变量 ESXI_HOST 指定地址")
         host = ask("ESXi 地址（IP 或域名）")
-        need_save = True
     if not user:
         user = ask("用户名", "root")
-        need_save = True
-    if not password:
+
+    password = os.environ.get("ESXI_PASSWORD")
+    if password:
+        info("使用环境变量 ESXI_PASSWORD 中的密码")
+    else:
         try:
             password = getpass(f"{user}@{host} 的密码：")
         except (EOFError, KeyboardInterrupt):
@@ -157,12 +169,8 @@ def resolve_credentials(args):
         if not password:
             die("密码不能为空")
 
-    if args.save_password:
-        cfg["password"] = password
-        cfg.update({"host": host, "user": user, "ssh_port": ssh_port})
-        save_config(cfg)
-        info("注意：密码以明文保存在 0600 权限的配置文件中")
-    elif args.save or (need_save and ask_yes("保存到本地配置（不含密码）？", True)):
+    if args.save:
+        cfg.pop("password", None)
         cfg.update({"host": host, "user": user, "ssh_port": ssh_port})
         save_config(cfg)
     return host, user, password, ssh_port
@@ -736,8 +744,7 @@ def main():
     ap.add_argument("--host", help="ESXi 地址")
     ap.add_argument("--user", help="用户名，默认 root")
     ap.add_argument("--ssh-port", type=int, help="SSH 端口，默认 22")
-    ap.add_argument("--save", action="store_true", help="保存地址/用户名到 ~/.config/esxi-clone/config.json")
-    ap.add_argument("--save-password", action="store_true", help="连密码一起保存（明文，文件权限 600）")
+    ap.add_argument("--save", action="store_true", help="保存地址/用户名（不保存密码）")
     ap.add_argument("--list", action="store_true", help="列出虚拟机")
     ap.add_argument("--check", action="store_true", help="检查克隆链完整性")
     ap.add_argument("--delete", nargs="+", metavar="NAME", help="安全删除克隆（注销 + 删自身目录）")

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # esxi-clone 安装器
 #
-#   一键安装： curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.1.tar.gz \
+#   一键安装： curl -fsSL https://mirror.zizdog.com:8888/others/esxi-clone-1.0.2.tar.gz \
 #                | tar xz -C /tmp && bash /tmp/esxi-clone/install.sh
 #   指定目录： ESXI_CLONE_DIR=/opt/esxi-clone curl -fsSL ... | bash
 #   国内镜像： PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple curl -fsSL ... | bash
@@ -9,7 +9,7 @@
 #
 set -euo pipefail
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 BASE_URL="${ESXI_CLONE_BASE:-https://mirror.zizdog.com:8888/apps/esxi-clone}"
 GITHUB_RAW="${ESXI_CLONE_GITHUB:-https://raw.githubusercontent.com/zizdog/esxi-clone/main}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" 2>/dev/null && pwd || true)"
